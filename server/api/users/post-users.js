@@ -3,6 +3,18 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 export default defineEventHandler(async (event) => {
+  // Add CORS headers
+  setResponseHeaders(event, {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  });
+
+  // Handle preflight requests
+  if (event.node.req.method === "OPTIONS") {
+    return "";
+  }
+
   const method = event.node.req.method;
   const body = await readBody(event).catch(() => ({}));
 
@@ -44,7 +56,7 @@ export default defineEventHandler(async (event) => {
     try {
       const existingUser = await pool.query(
         "SELECT users_id FROM users WHERE email = $1",
-        [email],
+        [email]
       );
 
       if (existingUser.rows.length > 0) {
@@ -59,7 +71,7 @@ export default defineEventHandler(async (event) => {
         `INSERT INTO users(name, email, password, role) 
          VALUES($1, $2, $3, $4) 
          RETURNING users_id, name, email, role`,
-        [name, email, hashedPassword, role],
+        [name, email, hashedPassword, role]
       );
 
       return {
@@ -85,7 +97,7 @@ export default defineEventHandler(async (event) => {
     try {
       const userResult = await pool.query(
         "SELECT users_id, name, email, password, role FROM users WHERE email = $1",
-        [email],
+        [email]
       );
       if (userResult.rows.length === 0) {
         return { statusCode: 401, message: "Email atau password salah" };
@@ -107,7 +119,10 @@ export default defineEventHandler(async (event) => {
         role: user.role,
       };
 
-      const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      const jwtSecret =
+        process.env.JWT_SECRET ||
+        "fallback-secret-key-change-this-in-production";
+      const token = jwt.sign(payload, jwtSecret, {
         expiresIn: "1d", // FIX 2: Nilai diubah ke format waktu yang valid
       });
 

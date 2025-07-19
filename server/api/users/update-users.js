@@ -17,7 +17,9 @@ export default defineEventHandler(async (event) => {
 
   let loggedInUser;
   try {
-    loggedInUser = jwt.verify(token, process.env.JWT_SECRET);
+    const jwtSecret =
+      process.env.JWT_SECRET || "fallback-secret-key-change-this-in-production";
+    loggedInUser = jwt.verify(token, jwtSecret);
   } catch (error) {
     return {
       statusCode: 401,
@@ -49,7 +51,7 @@ export default defineEventHandler(async (event) => {
     if (email) {
       const emailCheck = await pool.query(
         `SELECT users_id FROM users WHERE email = $1 AND users_id != $2`,
-        [email, id_to_update],
+        [email, id_to_update]
       );
       if (emailCheck.rows.length > 0) {
         return {
@@ -76,7 +78,9 @@ export default defineEventHandler(async (event) => {
 
     values.push(id_to_update); // ID untuk klausa WHERE
 
-    const updateQuery = `UPDATE users SET ${query_parts.join(", ")} WHERE users_id = $${param_index} RETURNING users_id, name, email, role`;
+    const updateQuery = `UPDATE users SET ${query_parts.join(
+      ", "
+    )} WHERE users_id = $${param_index} RETURNING users_id, name, email, role`;
 
     const result = await pool.query(updateQuery, values);
 

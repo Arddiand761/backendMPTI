@@ -17,7 +17,9 @@ export default defineEventHandler(async (event) => {
 
   let loggedInUser;
   try {
-    loggedInUser = jwt.verify(token, process.env.JWT_SECRET);
+    const jwtSecret =
+      process.env.JWT_SECRET || "fallback-secret-key-change-this-in-production";
+    loggedInUser = jwt.verify(token, jwtSecret);
   } catch (error) {
     return {
       statusCode: 401,
@@ -33,7 +35,7 @@ export default defineEventHandler(async (event) => {
   try {
     const result = await pool.query(
       `DELETE FROM users WHERE users_id = $1 RETURNING name`,
-      [id_to_delete],
+      [id_to_delete]
     );
 
     // Cek apakah ada baris yang terhapus
