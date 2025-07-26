@@ -129,7 +129,7 @@ export default defineEventHandler(async (event) => {
       // --- PERBAIKAN SELESAI ---
 
       return {
-        message: "Login berhasil",
+        message: "Loginberhasil",
         token: token,
         user: {
           users_id: user.users_id,
